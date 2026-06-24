@@ -1,0 +1,40 @@
+name: Run npm evals
+
+on:
+  push:
+    # Uncomment to run only when files in the 'evals' directory change
+    # - paths:
+    #     - "evals/**"
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  eval:
+    name: Run evals
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        id: setup-node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        id: install
+        run: npm install
+
+      - name: Run Evals
+        uses: step-security/eval-action@v1
+        with:
+          api_key: ${{ secrets.BRAINTRUST_API_KEY }}
+          runtime: node
+          root: my_eval_dir
