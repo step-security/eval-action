@@ -1,0 +1,7 @@
+[[IgnoredVulns]]
+id = "GHSA-g7r4-m6w7-qqqr"
+reason = "esbuild@0.28.0 is a transitive dependency of braintrust; ExperimentSummary is a type-only import erased at bundle time, so braintrust's esbuild is never exercised"
+
+[[IgnoredVulns]]
+id = "GHSA-w5hq-g745-h8pq"
+reason = "uuid@9.0.1 is a transitive dependency of @braintrust/core; only uuid.parse/stringify are called (not the vulnerable generators), and this action only uses capitalize() which has no uuid code path"
