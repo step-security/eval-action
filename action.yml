@@ -1,0 +1,57 @@
+name: "Braintrust eval"
+description: "Automatically run evals on your AI project using Braintrust."
+author: 'step-security'
+
+# Add your action's branding here. This will appear on the GitHub Marketplace.
+branding:
+  icon: "activity"
+  color: "blue"
+
+# Define your inputs here.
+inputs:
+  api_key:
+    description: "Your Braintrust API key"
+    required: true
+  root:
+    description: "Root directory from which to run evals"
+    required: false
+    default: "."
+  paths:
+    description: "A list of paths (and glob patterns) to include in the evals"
+    required: false
+    default: "."
+  runtime:
+    description: "The runtime to use for evals. Valid values: node, python."
+    required: true
+  package_manager:
+    description:
+      "The package manager to use for evals. Valid values: npm, pnpm, yarn, pip,
+      or uv depending on the runtime."
+    required: false
+    default: ""
+  use_proxy:
+    description:
+      "Whether to use the Braintrust proxy (to cache LLM calls). Set to 'true'
+      or 'false'."
+    required: true
+    default: "true"
+  terminate_on_failure:
+    description:
+      "Whether to terminate the evaluation process when an error occurs. Set to
+      'true' or 'false'."
+    required: false
+    default: "false"
+  github_token:
+    description: "Your GitHub token"
+    required: true
+    default: ${{ github.token }}
+  step_key:
+    description:
+      "A unique key to identify this step. Do not change this unless you know
+      what you're doing."
+    required: true
+    default: ${{ github.workflow_ref }}-${{ github.action }}
+
+runs:
+  using: node24
+  main: eval/dist/index.js
