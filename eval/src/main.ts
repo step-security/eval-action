@@ -4,7 +4,7 @@ import fs from "fs";
 
 import { upsertComment } from "./comment";
 import { ExperimentFailure, runEval } from "./braintrust";
-import { ExperimentSummary } from "braintrust";
+import type { ExperimentSummary } from "braintrust";
 import { capitalize } from "@braintrust/core";
 import { z } from "zod";
 
