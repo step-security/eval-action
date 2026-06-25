@@ -36,10 +36,12 @@ jobs:
         with:
           node-version-file: .tool-versions
           cache: npm
+          cache-dependency-path: eval/package-lock.json
 
       - name: Install Dependencies
         id: install
         run: npm ci
+        working-directory: eval
 
       - name: Build dist/ Directory
         id: build
