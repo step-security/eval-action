@@ -39,7 +39,7 @@
     "@actions/github": "^6.0.0",
     "@braintrust/core": "^0.0.34",
     "axios": "^1.7.9",
-    "braintrust": "^0.0.124",
+    "braintrust": "^3.18.0",
     "zod": "^3.23.4"
   },
   "devDependencies": {
