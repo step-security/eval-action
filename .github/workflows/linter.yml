@@ -10,12 +10,10 @@ on:
 
 permissions:
   contents: read
-  packages: read
-  statuses: write
 
 jobs:
   lint:
-    name: Lint Codebase
+    name: Vite+ Check
     runs-on: ubuntu-latest
 
     steps:
@@ -27,8 +25,6 @@ jobs:
       - name: Checkout
         id: checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js
         id: setup-node
@@ -43,15 +39,7 @@ jobs:
         run: npm ci
         working-directory: eval
 
-      - name: Lint Codebase
-        id: super-linter
-        uses: super-linter/super-linter/slim@9e863354e3ff62e0727d37183162c4a88873df41 # v8.6.0
+      - name: Check
+        id: check
+        run: npm run check
         working-directory: eval
-        env:
-          DEFAULT_BRANCH: main
-          FILTER_REGEX_EXCLUDE: dist/**/*
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TYPESCRIPT_DEFAULT_STYLE: prettier
-          VALIDATE_ALL_CODEBASE: true
-          VALIDATE_JAVASCRIPT_STANDARD: false
-          VALIDATE_JSCPD: false
