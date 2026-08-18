@@ -13,7 +13,7 @@ export interface ExperimentFailure {
 type OnSummaryFn = (summary: (ExperimentSummary | ExperimentFailure)[]) => void;
 
 function snakeToCamelCase(str: string) {
-  return str.replace(/([-_][a-z])/g, group => group.charAt(1).toUpperCase());
+  return str.replace(/([-_][a-z])/g, (group) => group.charAt(1).toUpperCase());
 }
 
 const summaryKeyMap: Record<string, string> = {
@@ -46,11 +46,7 @@ function normalizeSummaryKeys(value: Record<string, unknown>) {
 function parseSummaryLine(line: string) {
   try {
     const parsedLine = JSON.parse(line) as unknown;
-    if (
-      parsedLine === null ||
-      typeof parsedLine !== "object" ||
-      Array.isArray(parsedLine)
-    ) {
+    if (parsedLine === null || typeof parsedLine !== "object" || Array.isArray(parsedLine)) {
       core.info(line);
       return [];
     }
@@ -61,8 +57,7 @@ function parseSummaryLine(line: string) {
     const summary = normalizeSummaryKeys(parsedLine as Record<string, unknown>);
     if (
       ("errors" in summary && "evaluatorName" in summary) ||
-      ("experimentName" in summary &&
-        ("scores" in summary || "metrics" in summary))
+      ("experimentName" in summary && ("scores" in summary || "metrics" in summary))
     ) {
       return [summary as unknown as ExperimentSummary];
     }
@@ -111,7 +106,7 @@ async function runCommand(
       core.info(data.toString()); // Outputs the stderr of the command
     });
 
-    child.on("close", code => {
+    child.on("close", (code) => {
       if (stdoutBuffer.length > 0) {
         handleStdoutLine(stdoutBuffer);
         stdoutBuffer = "";
@@ -165,9 +160,7 @@ export async function runEval(args: Params, onSummary: OnSummaryFn) {
             case "pnpm":
               return "pnpm dlx braintrust";
             default:
-              throw new Error(
-                `Unsupported package manager: ${args.package_manager}`,
-              );
+              throw new Error(`Unsupported package manager: ${args.package_manager}`);
           }
         })();
         return `${baseCommand} eval --jsonl ${terminateFlag} ${paths}`;
@@ -181,9 +174,7 @@ export async function runEval(args: Params, onSummary: OnSummaryFn) {
             case "uv":
               return `uv run braintrust`;
             default:
-              throw new Error(
-                `Unsupported package manager: ${args.package_manager}`,
-              );
+              throw new Error(`Unsupported package manager: ${args.package_manager}`);
           }
         })();
         return `${baseCommand} eval --jsonl ${terminateFlag} ${paths}`;
@@ -197,9 +188,7 @@ export async function runEval(args: Params, onSummary: OnSummaryFn) {
             }
             return `go run ${paths}`;
           default:
-            throw new Error(
-              `Unsupported package manager: ${args.package_manager}`,
-            );
+            throw new Error(`Unsupported package manager: ${args.package_manager}`);
         }
       default:
         throw new Error(`Unsupported runtime: ${args.runtime}`);
