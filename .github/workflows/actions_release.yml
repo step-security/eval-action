@@ -7,9 +7,17 @@ on:
         description: "Tag for the release"
         required: true
       node_version:
-        description: "Node.js version to use"
+        description: "Node.js version to use for building actions"
         required: false
         default: "24"
+      working_directory:
+        description: "Comma-separated list of action directories to build"
+        required: false
+        default: "eval"
+      script:
+        description: "Build script to run in each action directory"
+        required: false
+        default: "npm run all"
 
 permissions:
   contents: read
@@ -24,5 +32,7 @@ jobs:
     uses: step-security/reusable-workflows/.github/workflows/actions_release.yaml@v1
     with:
       tag: "${{ github.event.inputs.tag }}"
-      node_version: ${{ inputs.node_version || '24' }}
-      working_directory: ./eval
+      node_version: "${{ github.event.inputs.node_version }}"
+      setup_node: true
+      working_directory: "${{ github.event.inputs.working_directory }}"
+      script: "${{ github.event.inputs.script }}"

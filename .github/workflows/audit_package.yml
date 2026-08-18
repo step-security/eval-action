@@ -15,20 +15,45 @@ on:
         description: "Node.js version to use"
         required: false
         default: "24"
+      working_directories:
+        description: "Comma-separated list of working directories to run audit fix in"
+        required: false
+        default: "eval"
+      script:
+        description: "Build script to run after audit fix"
+        required: false
+        default: "npm run all"
   schedule:
     - cron: "0 0 * * 1"
-
-jobs:
-  audit-fix:
-    uses: step-security/reusable-workflows/.github/workflows/audit_fix.yml@v1
-    with:
-      force: ${{ inputs.force || false }}
-      base_branch: ${{ inputs.base_branch || 'main' }}
-      node_version: ${{ inputs.node_version || '24' }}
-      working_directory: ./eval
 
 permissions:
   contents: write
   pull-requests: write
   packages: read
   issues: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      directories: ${{ steps.set-matrix.outputs.directories }}
+    steps:
+      - name: Build directory matrix
+        id: set-matrix
+        run: |
+          INPUT="${{ inputs.working_directories || 'eval' }}"
+          DIRS=$(echo "$INPUT" | tr ',' '\n' | sed 's/^ *//;s/ *$//' | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "directories=$DIRS" >> "$GITHUB_OUTPUT"
+
+  audit-fix:
+    needs: prepare
+    strategy:
+      matrix:
+        directory: ${{ fromJson(needs.prepare.outputs.directories) }}
+    uses: step-security/reusable-workflows/.github/workflows/audit_fix.yml@v1
+    with:
+      force: ${{ inputs.force || false }}
+      base_branch: ${{ inputs.base_branch || 'main' }}
+      node_version: ${{ inputs.node_version || '24' }}
+      working_directory: ${{ matrix.directory }}
+      script: ${{ inputs.script || 'npm run all' }}
