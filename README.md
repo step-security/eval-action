@@ -9,7 +9,7 @@ simply include the following step in an action file:
 
 ```yaml
 - name: Run Evals
-  uses: step-security/eval-action@v1
+  uses: step-security/eval-action@v2
   with:
     api_key: ${{ secrets.BRAINTRUST_API_KEY }}
     runtime: node
@@ -61,7 +61,7 @@ jobs:
 
       - name: Setup Node.js
         id: setup-node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 20
 
@@ -74,7 +74,7 @@ jobs:
         run: pnpm install
 
       - name: Run Evals
-        uses: step-security/eval-action@v1
+        uses: step-security/eval-action@v2
         with:
           api_key: ${{ secrets.BRAINTRUST_API_KEY }}
           runtime: node

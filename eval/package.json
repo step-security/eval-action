@@ -1,7 +1,7 @@
 {
   "name": "eval-action",
   "description": "StepSecurity maintained GitHub Action for running Braintrust evals in CI",
-  "version": "1.0.16",
+  "version": "2.0.0",
   "author": "step-security",
   "private": true,
   "type": "module",

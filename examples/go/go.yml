@@ -18,7 +18,7 @@ jobs:
     steps:
       - name: Checkout
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -34,7 +34,7 @@ jobs:
         run: go mod download
 
       - name: Run Evals
-        uses: braintrustdata/eval-action@v1
+        uses: step-security/eval-action@v2
         with:
           api_key: ${{ secrets.BRAINTRUST_API_KEY }}
           runtime: go
