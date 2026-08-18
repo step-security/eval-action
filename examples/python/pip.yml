@@ -34,7 +34,7 @@ jobs:
           pip install -r test-eval-py/requirements.txt
 
       - name: Run Evals
-        uses: step-security/eval-action@v1
+        uses: step-security/eval-action@v2
         with:
           api_key: ${{ secrets.BRAINTRUST_API_KEY }}
           runtime: python

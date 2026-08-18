@@ -17,14 +17,10 @@ export async function upsertComment(text: string) {
 
   const prs = await inferPullRequestsFromContext(octokit);
 
-  await Promise.all(prs.map(pr => createOrUpdateComment(octokit, pr, text)));
+  await Promise.all(prs.map((pr) => createOrUpdateComment(octokit, pr, text)));
 }
 
-const createOrUpdateComment = async (
-  octokit: Octokit,
-  pullRequest: PullRequest,
-  body: string,
-) => {
+const createOrUpdateComment = async (octokit: Octokit, pullRequest: PullRequest, body: string) => {
   const stepKey = core.getInput("step_key", { required: true });
   const commentKey = `<!-- braintrust_bot_comment ${stepKey} -->`;
   const comment = await findComment(octokit, pullRequest, commentKey);
@@ -66,9 +62,7 @@ const findComment = async (
     direction: "desc",
     per_page: 100,
   });
-  core.debug(
-    `Found ${comments.length} comment(s) of #${pullRequest.issue_number}`,
-  );
+  core.debug(`Found ${comments.length} comment(s) of #${pullRequest.issue_number}`);
   for (const comment of comments) {
     if (comment.body?.includes(key)) {
       return { ...comment, body: comment.body };
@@ -76,9 +70,7 @@ const findComment = async (
   }
 };
 
-const inferPullRequestsFromContext = async (
-  octokit: Octokit,
-): Promise<PullRequest[]> => {
+const inferPullRequestsFromContext = async (octokit: Octokit): Promise<PullRequest[]> => {
   const { context } = github;
   if (Number.isSafeInteger(context.issue.number)) {
     core.debug(`Use #${context.issue.number} from the current context`);
@@ -100,7 +92,7 @@ const inferPullRequestsFromContext = async (
   for (const pull of pulls.data) {
     core.debug(`  #${pull.number}: ${pull.title}`);
   }
-  return pulls.data.map(p => ({
+  return pulls.data.map((p) => ({
     owner: context.repo.owner,
     repo: context.repo.repo,
     issue_number: p.number,

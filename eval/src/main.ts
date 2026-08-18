@@ -5,7 +5,6 @@ import fs from "fs";
 import { upsertComment } from "./comment";
 import { ExperimentFailure, runEval } from "./braintrust";
 import type { ExperimentSummary } from "braintrust";
-import { capitalize } from "@braintrust/core";
 import { z } from "zod";
 
 async function validateSubscription() {
@@ -19,14 +18,12 @@ async function validateSubscription() {
 
   const upstream = "braintrustdata/eval-action";
   const action = process.env.GITHUB_ACTION_REPOSITORY;
-  const docsUrl =
-    "https://docs.stepsecurity.io/actions/stepsecurity-maintained-actions";
+  const docsUrl = "https://docs.stepsecurity.io/actions/stepsecurity-maintained-actions";
 
   core.info("");
   core.info("\u001b[1;36mStepSecurity Maintained Action\u001b[0m");
   core.info(`Secure drop-in replacement for ${upstream}`);
-  if (repoPrivate === false)
-    core.info("\u001b[32m\u2713 Free for public repositories\u001b[0m");
+  if (repoPrivate === false) core.info("\u001b[32m\u2713 Free for public repositories\u001b[0m");
   core.info(`\u001b[36mLearn more:\u001b[0m ${docsUrl}`);
   core.info("");
 
@@ -46,9 +43,7 @@ async function validateSubscription() {
       core.error(
         `\u001b[1;31mThis action requires a StepSecurity subscription for private repositories.\u001b[0m`,
       );
-      core.error(
-        `\u001b[31mLearn how to enable a subscription: ${docsUrl}\u001b[0m`,
-      );
+      core.error(`\u001b[31mLearn how to enable a subscription: ${docsUrl}\u001b[0m`);
       process.exit(1);
     }
     core.info("Timeout or API not reachable. Continuing to next step.");
@@ -57,6 +52,12 @@ async function validateSubscription() {
 
 const nodeManagers = ["npm", "pnpm"];
 const pythonManagers = ["pip", "uv"];
+const goManagers = ["go"];
+const booleanInput = z.stringbool({ truthy: ["true"], falsy: ["false"] });
+
+function capitalize(value: string) {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
 
 // The eval command is executed with `shell: true`, so reject shell
 // metacharacters in `paths` to prevent command injection. Multiple
@@ -67,28 +68,19 @@ const paramsSchema = z
   .strictObject({
     api_key: z.string(),
     root: z.string(),
-    paths: z.string().refine(value => !SHELL_METACHARACTERS.test(value), {
+    paths: z.string().refine((value) => !SHELL_METACHARACTERS.test(value), {
       message: "paths contains disallowed shell metacharacters",
     }),
-    runtime: z.enum(["node", "python"]),
+    runtime: z.enum(["node", "python", "go"]),
     package_manager: z
-      .enum(["", ...nodeManagers, ...pythonManagers])
+      .enum(["", ...nodeManagers, ...pythonManagers, ...goManagers])
       .describe("The preferred package manager for the runtime selected")
       .default(""),
-    use_proxy: z
-      .string()
-      .toLowerCase()
-      .transform(x => JSON.parse(x))
-      .pipe(z.boolean()),
-    terminate_on_failure: z
-      .string()
-      .toLowerCase()
-      .transform(x => JSON.parse(x))
-      .pipe(z.boolean())
-      .default("false"),
+    use_proxy: booleanInput,
+    terminate_on_failure: booleanInput.default(false),
   })
   .refine(
-    data => {
+    (data) => {
       if (data.package_manager === "") {
         return true;
       }
@@ -97,6 +89,9 @@ const paramsSchema = z
       }
       if (data.runtime === "python") {
         return pythonManagers.includes(data.package_manager as any);
+      }
+      if (data.runtime === "go") {
+        return goManagers.includes(data.package_manager as any);
       }
       return false;
     },
@@ -121,12 +116,10 @@ async function main(): Promise<void> {
     runtime: core.getInput("runtime"),
     package_manager: core.getInput("package_manager"),
     use_proxy: core.getInput("use_proxy"),
-    terminate_on_failure: core.getInput("terminate_on_failure"),
+    terminate_on_failure: core.getInput("terminate_on_failure") || undefined,
   });
   if (!args.success) {
-    throw new Error(
-      `Invalid arguments: ${args.error.errors.map(e => e.message).join("\n")}`,
-    );
+    throw new Error(`Invalid arguments: ${args.error.issues.map((e) => e.message).join("\n")}`);
   }
 
   await upsertComment(`${TITLE}Evals in progress... ⌛`);
@@ -172,13 +165,8 @@ async function updateComments(mustRun: boolean) {
           }
           if ("errors" in summary) {
             let prefix = "**‼️** ";
-            if (
-              idx < allSummaries.length - 1 &&
-              !("errors" in allSummaries[idx + 1])
-            ) {
-              prefix += formatSummary(
-                allSummaries[idx + 1] as ExperimentSummary,
-              );
+            if (idx < allSummaries.length - 1 && !("errors" in allSummaries[idx + 1])) {
+              prefix += formatSummary(allSummaries[idx + 1] as ExperimentSummary);
             } else {
               prefix += `**${summary.evaluatorName} failed to run**`;
             }
@@ -199,9 +187,7 @@ ${errors}
       );
       const comment =
         TITLE +
-        (summaryTables.length > 0
-          ? summaryTables.join("\n\n")
-          : "No experiments to report");
+        (summaryTables.length > 0 ? summaryTables.join("\n\n") : "No experiments to report");
       await upsertComment(comment);
       queuedUpdates -= 1;
     }
@@ -214,17 +200,14 @@ function formatSummary(summary: ExperimentSummary) {
   const columns = ["Score", "Average", "Improvements", "Regressions"];
   const header = columns.join(" | ");
   // Right align the Improvements and Regressions column cells
-  const separator = columns
-    .map((_, idx) => (idx > 1 ? "---:" : ":---"))
-    .join(" | ");
+  const separator = columns.map((_, idx) => (idx > 1 ? "---:" : ":---")).join(" | ");
 
-  const rowData = Object.entries(summary.scores)
+  const rowData = Object.entries(summary.scores ?? {})
     .map(([name, scoreSummary]) => {
       let diffText = "";
       if (scoreSummary.diff !== undefined) {
         const diffN = round(scoreSummary.diff, 2) * 100;
-        diffText =
-          " " + (scoreSummary.diff >= 0 ? `(+${diffN}pp)` : `(${diffN}pp)`);
+        diffText = " " + (scoreSummary.diff >= 0 ? `(+${diffN}pp)` : `(${diffN}pp)`);
       }
 
       return {
@@ -261,12 +244,8 @@ function formatSummary(summary: ExperimentSummary) {
   const rows = rowData.map(
     ({ name, avg, improvements, regressions }) =>
       `${capitalize(name)} | ${avg} | ${
-        improvements !== undefined && improvements > 0
-          ? `${improvements} 🟢`
-          : `-`
-      } | ${
-        regressions !== undefined && regressions > 0 ? `${regressions} 🔴` : `-`
-      }`,
+        improvements !== undefined && improvements > 0 ? `${improvements} 🟢` : `-`
+      } | ${regressions !== undefined && regressions > 0 ? `${regressions} 🔴` : `-`}`,
   );
   return `${text}\n${header}\n${separator}\n${rows.join("\n")}`;
 }
