@@ -47,7 +47,7 @@
   "dependencies": {
     "@actions/core": "^3.0.1",
     "@actions/github": "^9.1.1",
-    "axios": "^1.7.9",
+    "axios": "^1.19.0",
     "braintrust": "^3.21.0",
     "zod": "^4.4.3"
   },
