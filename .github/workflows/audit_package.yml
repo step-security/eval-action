@@ -38,6 +38,11 @@ jobs:
     outputs:
       directories: ${{ steps.set-matrix.outputs.directories }}
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
       - name: Build directory matrix
         id: set-matrix
         run: |
